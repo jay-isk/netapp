@@ -130,7 +130,7 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
           <DialogDescription>
             {showRegistration
               ? "Please fill in your information to register and start playing the campaign."
-              : "Enter your full name and email to continue playing."}
+              : "Use your registered email to access today's game."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
