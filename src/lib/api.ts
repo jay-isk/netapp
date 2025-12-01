@@ -128,12 +128,12 @@ export interface DashboardResponse {
 
 export interface SessionResponse {
   success: boolean;
-  token?: string;
+  token?: string | null;
   session?: {
     id: number;
     email: string;
     campaign_id: number;
-  };
+  } | null;
 }
 
 // API Methods
