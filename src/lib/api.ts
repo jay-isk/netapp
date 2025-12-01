@@ -218,6 +218,7 @@ export interface SessionResponse {
     email: string;
     campaign_id: number;
   } | null;
+  message?: string;
 }
 
 // API Methods
@@ -227,8 +228,7 @@ export const campaignAPI = {
    */
   async register(
     email: string, 
-    firstName?: string, 
-    lastName?: string, 
+    fullName?: string,
     company?: string, 
     jobTitle?: string, 
     businessPhone?: string
@@ -237,8 +237,7 @@ export const campaignAPI = {
       method: 'POST',
       body: JSON.stringify({
         email,
-        first_name: firstName,
-        last_name: lastName,
+        full_name: fullName,
         company: company,
         job_title: jobTitle,
         business_phone: businessPhone,

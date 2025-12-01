@@ -54,16 +54,16 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
         setShowEmailEntry(false);
         await loadDashboard();
       } else {
-        // No valid session found
+        // No valid session found - show email entry (not registration yet)
         setHasSession(false);
         setShowEmailEntry(true);
-        setIsRegistration(true);
+        setIsRegistration(false); // Start with email-only form
       }
     } catch (error: any) {
-      // On error, show registration form
+      // On error, show email entry form (not registration yet)
       setHasSession(false);
       setShowEmailEntry(true);
-      setIsRegistration(true);
+      setIsRegistration(false); // Start with email-only form
       console.error('Session check error:', error);
     } finally {
       setIsLoading(false);

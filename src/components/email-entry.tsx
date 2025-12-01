@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { campaignAPI } from "@/lib/api";
 
@@ -21,20 +22,30 @@ interface EmailEntryProps {
 
 export default function EmailEntry({ onSessionCreated, isRegistration = false }: EmailEntryProps) {
   const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(isRegistration);
   const { toast } = useToast();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (isRegistration) {
+    // Validate required fields
+    if (!fullName) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your full name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (showRegistration) {
       // Validate required fields for registration
-      if (!firstName || !lastName || !company || !jobTitle) {
+      if (!company || !jobTitle) {
         toast({
           title: "Missing Information",
           description: "Please fill in all required fields",
@@ -56,32 +67,43 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
     setIsLoading(true);
 
     try {
-      if (isRegistration) {
-        // Register first, then create session
+      if (showRegistration) {
+        // Register the user first with full details
         await campaignAPI.register(
           email, 
-          firstName || undefined, 
-          lastName || undefined,
+          fullName || undefined,
           company || undefined,
           jobTitle || undefined,
           businessPhone || undefined
         );
+      } else {
+        // For existing users, we still need to send full name for session creation
+        // The backend will update the user's full name if provided
+        if (fullName) {
+          await campaignAPI.register(
+            email, 
+            fullName,
+            undefined,
+            undefined,
+            undefined
+          );
+        }
       }
       
-      // Create session
+      // Create session (works for both new and existing users)
       const response = await campaignAPI.createSession(email);
       
       if (response.success && response.token) {
         // Token is already stored in localStorage by createSession
         toast({
           title: "Success!",
-          description: isRegistration 
+          description: showRegistration 
             ? "Registration successful! You can now start playing."
             : "Welcome back! Loading your progress...",
         });
         onSessionCreated();
       } else {
-        throw new Error("Failed to create session");
+        throw new Error(response.message || "Failed to create session");
       }
     } catch (error: any) {
       toast({
@@ -103,40 +125,29 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
       <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col" hideClose>
         <DialogHeader>
           <DialogTitle>
-            {isRegistration ? "Register to Play" : "Enter Your Email"}
+            {showRegistration ? "Register to Play" : "Enter Your Email"}
           </DialogTitle>
           <DialogDescription>
-            {isRegistration
+            {showRegistration
               ? "Please fill in your information to register and start playing the campaign."
-              : "Enter the same email you used to register to continue playing."}
+              : "Enter your full name and email to continue playing."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="space-y-4 overflow-y-auto flex-1 pr-2 mb-4">
-            {isRegistration && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name *</Label>
+              <Input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="John Doe"
+                required
+              />
+            </div>
+            {showRegistration && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Doe"
-                    required
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="company">Company *</Label>
                   <Input
@@ -162,17 +173,17 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">{isRegistration ? "Business Email *" : "Email Address *"}</Label>
+              <Label htmlFor="email">{showRegistration ? "Business Email *" : "Email Address *"}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={isRegistration ? "business.email@company.com" : "your.email@example.com"}
+                placeholder={showRegistration ? "business.email@company.com" : "your.email@example.com"}
                 required
               />
             </div>
-            {isRegistration && (
+            {showRegistration && (
               <div className="space-y-2">
                 <Label htmlFor="businessPhone">Business Phone (Optional)</Label>
                 <Input
@@ -185,9 +196,18 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
               </div>
             )}
           </div>
-          <Button type="submit" className="w-full mt-auto" disabled={isLoading}>
-            {isLoading ? "Loading..." : isRegistration ? "Register & Start Playing" : "Continue Playing"}
-          </Button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-start sm:space-x-2">
+            <Button 
+              type="submit" 
+              className="group inline-block rounded-none font-bold px-6 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
+              disabled={isLoading}
+            >
+              <span className="flex items-center gap-2">
+                {isLoading ? "Loading..." : showRegistration ? "Register & Start Playing" : "Continue Playing"}
+                {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
+              </span>
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
