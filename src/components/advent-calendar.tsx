@@ -434,12 +434,12 @@ function QuestionModal({
             <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-start sm:space-x-2">
               <Button 
                 type="submit" 
-                className="group inline-block rounded-none bg-[#61dcf1] hover:bg-[#4fc8db] text-black font-bold px-6 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
+                className="group inline-block rounded-none font-bold px-6 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
                 disabled={isLoading}
               >
                 <span className="flex items-center gap-2">
                   {isLoading ? "Submitting..." : "Submit Answer"}
-                  {!isLoading && <ArrowRight className="w-4 h-4 text-black transition-transform duration-300 group-hover:translate-x-1" />}
+                  {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
                 </span>
               </Button>
             </DialogFooter>
