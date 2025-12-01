@@ -13,7 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Gift, Lock, Sparkles, X, ArrowRight } from "lucide-react";
+import { Check, Gift, Lock, Sparkles, X, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { campaignAPI, type Day, type DayDetails } from "@/lib/api";
 import EmailEntry from "./email-entry";
@@ -35,6 +35,7 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
   const [answerResult, setAnswerResult] = useState<{ is_correct: boolean; correct_answer_text: string } | null>(null);
   const [showEmailEntry, setShowEmailEntry] = useState(false);
   const [isRegistration, setIsRegistration] = useState(false);
+  const [loadingDayNumber, setLoadingDayNumber] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Check for existing session on mount
@@ -116,7 +117,7 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
     }
 
     try {
-      setIsLoading(true);
+      setLoadingDayNumber(day.day_number);
       const response = await campaignAPI.getDayDetails(day.day_number);
       
       if (response.success && response.day) {
@@ -130,7 +131,7 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoadingDayNumber(null);
     }
   };
 
@@ -239,10 +240,15 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
             >
               <button
                 onClick={() => handleDayClick(day)}
-                disabled={!unlocked}
+                disabled={!unlocked || loadingDayNumber === day.day_number}
                 className="relative aspect-[2.5/1] w-full flex items-center justify-between p-4 rounded-[6px] bg-primary shadow-lg transition-all duration-300 ease-in-out group-hover:bg-card-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:opacity-1 disabled:cursor-not-allowed disabled:bg-primary"
                 aria-label={`Day ${day.day_number}, ${unlocked ? "unlocked" : "locked"}${answered ? ", completed" : ""}`}
               >
+                {loadingDayNumber === day.day_number && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-primary/80 rounded-[6px] z-10">
+                    <Loader2 className="w-8 h-8 text-[#25006d] animate-spin" />
+                  </div>
+                )}
                 <span className="absolute top-2 left-2 text-xs font-bold uppercase text-[#25006d] group-hover:text-[#eb5bff] transition-colors">
                   {day.day_date ? new Date(day.day_date + "T00:00:00").toLocaleDateString("en-US", { month: "long" }).toUpperCase() : "DECEMBER"}
                 </span>

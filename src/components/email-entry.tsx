@@ -100,7 +100,7 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
 
   return (
     <Dialog open={true}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col" hideClose>
         <DialogHeader>
           <DialogTitle>
             {isRegistration ? "Register to Play" : "Enter Your Email"}
@@ -111,79 +111,81 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
               : "Enter the same email you used to register to continue playing."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegistration && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="John"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Doe"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="company">Company *</Label>
-                <Input
-                  id="company"
-                  type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Company Name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">Job Title *</Label>
-                <Input
-                  id="jobTitle"
-                  type="text"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="Your Job Title"
-                  required
-                />
-              </div>
-            </>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email">{isRegistration ? "Business Email *" : "Email Address *"}</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={isRegistration ? "business.email@company.com" : "your.email@example.com"}
-              required
-            />
-          </div>
-          {isRegistration && (
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2 mb-4">
+            {isRegistration && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="John"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company *</Label>
+                  <Input
+                    id="company"
+                    type="text"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Company Name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="jobTitle">Job Title *</Label>
+                  <Input
+                    id="jobTitle"
+                    type="text"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    placeholder="Your Job Title"
+                    required
+                  />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="businessPhone">Business Phone (Optional)</Label>
+              <Label htmlFor="email">{isRegistration ? "Business Email *" : "Email Address *"}</Label>
               <Input
-                id="businessPhone"
-                type="tel"
-                value={businessPhone}
-                onChange={(e) => setBusinessPhone(e.target.value)}
-                placeholder="+1 (555) 123-4567"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={isRegistration ? "business.email@company.com" : "your.email@example.com"}
+                required
               />
             </div>
-          )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isRegistration && (
+              <div className="space-y-2">
+                <Label htmlFor="businessPhone">Business Phone (Optional)</Label>
+                <Input
+                  id="businessPhone"
+                  type="tel"
+                  value={businessPhone}
+                  onChange={(e) => setBusinessPhone(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+            )}
+          </div>
+          <Button type="submit" className="w-full mt-auto" disabled={isLoading}>
             {isLoading ? "Loading..." : isRegistration ? "Register & Start Playing" : "Continue Playing"}
           </Button>
         </form>
