@@ -6,24 +6,108 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_WP_API_URL || 'http://localhost';
 const API_ENDPOINT = `${API_BASE_URL}/wp-json/netapp-campaign/v1`;
 
-// Session token management using localStorage
+// Session token management using localStorage with fallback support
 const SESSION_TOKEN_KEY = 'netapp_campaign_token';
+
+// Check if localStorage is available
+const isLocalStorageAvailable = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  
+  try {
+    const test = '__localStorage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch (e) {
+    // localStorage is not available (private mode, disabled, quota exceeded, etc.)
+    return false;
+  }
+};
+
+// Fallback storage using sessionStorage (if available) or in-memory storage
+let memoryStorage: { [key: string]: string } = {};
 
 export const sessionStorage = {
   getToken: (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(SESSION_TOKEN_KEY);
+    if (typeof window === 'undefined') {
+      return null;
     }
-    return null;
+    
+    try {
+      if (isLocalStorageAvailable()) {
+        return localStorage.getItem(SESSION_TOKEN_KEY);
+      }
+      
+      // Fallback to sessionStorage
+      if (typeof window.sessionStorage !== 'undefined') {
+        try {
+          return window.sessionStorage.getItem(SESSION_TOKEN_KEY);
+        } catch (e) {
+          // sessionStorage also not available
+        }
+      }
+      
+      // Fallback to memory storage (cleared on page refresh)
+      return memoryStorage[SESSION_TOKEN_KEY] || null;
+    } catch (e) {
+      console.warn('Failed to get token from storage:', e);
+      return null;
+    }
   },
+  
   setToken: (token: string): void => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(SESSION_TOKEN_KEY, token);
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    try {
+      if (isLocalStorageAvailable()) {
+        localStorage.setItem(SESSION_TOKEN_KEY, token);
+        return;
+      }
+      
+      // Fallback to sessionStorage
+      if (typeof window.sessionStorage !== 'undefined') {
+        try {
+          window.sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+          return;
+        } catch (e) {
+          // sessionStorage also not available
+        }
+      }
+      
+      // Fallback to memory storage (cleared on page refresh)
+      memoryStorage[SESSION_TOKEN_KEY] = token;
+    } catch (e) {
+      console.warn('Failed to set token in storage:', e);
     }
   },
+  
   removeToken: (): void => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(SESSION_TOKEN_KEY);
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    try {
+      if (isLocalStorageAvailable()) {
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+      }
+      
+      // Also try sessionStorage
+      if (typeof window.sessionStorage !== 'undefined') {
+        try {
+          window.sessionStorage.removeItem(SESSION_TOKEN_KEY);
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+      
+      // Clear from memory storage
+      delete memoryStorage[SESSION_TOKEN_KEY];
+    } catch (e) {
+      console.warn('Failed to remove token from storage:', e);
     }
   },
 };

@@ -34,11 +34,11 @@ export default function Home() {
                 </g>
               </svg>
             </div>
-            <div className="flex items-center justify-between -mt-[30px]">
-              <h1 className="text-[70px] font-date uppercase text-primary-foreground tracking-wider font-normal">
+            <div className="flex items-center justify-between -mt-[20px]">
+              <h1 className="text-[70px] font-date uppercase text-primary-foreground tracking-wider font-normal leading-[1]">
                 {totalDays} Days of Giving
               </h1>
-              <div className="text-left text-[#e424ff] uppercase font-date text-[50px] tracking-wider -mt-[30px]">
+              <div className="text-left text-[#e424ff] uppercase font-date text-[50px] tracking-wider -mt-[20px] leading-[1]">
                 <h2>HAPPY</h2>
                 <h2>HOLIDAYS</h2>
               </div>
