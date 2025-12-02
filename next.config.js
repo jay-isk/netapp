@@ -24,10 +24,20 @@ const remotePatterns = [
     hostname: 'localhost',
     pathname: '/**',
   },
+  {
+    protocol: 'https',
+    hostname: 'localhost',
+    pathname: '/**',
+  },
   // Add WordPress staging domain
   {
     protocol: 'https',
     hostname: 'netappstaging.wpenginepowered.com',
+    pathname: '/**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'backend.netapp12daysofgiving.com',
     pathname: '/**',
   },
 ];

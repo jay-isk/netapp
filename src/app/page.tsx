@@ -21,9 +21,8 @@ export default function Home() {
         <div className="w-full max-w-7xl">
           <div className="text-left mb-2 px-4">
             <div className="mb-8" data-ai-hint="logo">
-              <svg 
-                width="130" 
-                height="22" 
+              <svg  
+                height="40" 
                 xmlns="http://www.w3.org/2000/svg" 
                 className="fill-white"
                 viewBox="0 0 117 22"
@@ -34,11 +33,11 @@ export default function Home() {
                 </g>
               </svg>
             </div>
-            <div className="flex items-center justify-between -mt-[20px]">
-              <h1 className="text-[70px] font-date uppercase text-primary-foreground tracking-wider font-normal leading-[1]">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between -mt-[20px]">
+              <h1 className="text-[70px] font-date uppercase text-primary-foreground tracking-wider font-normal leading-[1] w-full md:w-auto">
                 {totalDays} Days of Giving
               </h1>
-              <div className="text-left text-[#e424ff] uppercase font-date text-[50px] tracking-wider -mt-[20px] leading-[1]">
+              <div className="text-left text-[#e424ff] uppercase font-date text-[50px] tracking-wider mt-[20px] md:-mt-[20px] leading-[1]">
                 <h2>HAPPY</h2>
                 <h2>HOLIDAYS</h2>
               </div>

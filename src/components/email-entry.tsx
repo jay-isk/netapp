@@ -98,8 +98,8 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
         toast({
           title: "Success!",
           description: showRegistration 
-            ? "Registration successful! You can now start playing."
-            : "Welcome back! Loading your progress...",
+            ? "Registration successful! Loading your game..."
+            : "Welcome! Loading your game...",
         });
         onSessionCreated();
       } else {
@@ -122,12 +122,12 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
 
   return (
     <Dialog open={true}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col" hideClose>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col bg-[#540063] border-[#E424FF]" hideClose>
         <DialogHeader>
-          <DialogTitle>
-            {showRegistration ? "Register to Play" : "Enter Your Email"}
+          <DialogTitle className="text-white">
+            {showRegistration ? "Register to Play" : "Confirm Your Details"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-200">
             {showRegistration
               ? "Please fill in your information to register and start playing the campaign."
               : "Use your registered email to access today's game."}
@@ -136,20 +136,21 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="space-y-4 overflow-y-auto flex-1 pr-2 mb-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name *</Label>
+              <Label htmlFor="fullName" className="text-white">Full Name *</Label>
               <Input
                 id="fullName"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
+                placeholder="Full Name"
                 required
+                className="bg-transparent border-white/30 text-white placeholder:text-white/50 focus-visible:border-[#E424FF]"
               />
             </div>
             {showRegistration && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company *</Label>
+                  <Label htmlFor="company" className="text-white">Company *</Label>
                   <Input
                     id="company"
                     type="text"
@@ -157,10 +158,11 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
                     onChange={(e) => setCompany(e.target.value)}
                     placeholder="Company Name"
                     required
+                    className="bg-transparent border-white/30 text-white placeholder:text-white/50 focus-visible:border-[#E424FF]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="jobTitle">Job Title *</Label>
+                  <Label htmlFor="jobTitle" className="text-white">Job Title *</Label>
                   <Input
                     id="jobTitle"
                     type="text"
@@ -168,12 +170,13 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
                     onChange={(e) => setJobTitle(e.target.value)}
                     placeholder="Your Job Title"
                     required
+                    className="bg-transparent border-white/30 text-white placeholder:text-white/50 focus-visible:border-[#E424FF]"
                   />
                 </div>
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">{showRegistration ? "Business Email *" : "Email Address *"}</Label>
+              <Label htmlFor="email" className="text-white">{showRegistration ? "Business Email *" : "Email Address *"}</Label>
               <Input
                 id="email"
                 type="email"
@@ -181,32 +184,34 @@ export default function EmailEntry({ onSessionCreated, isRegistration = false }:
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={showRegistration ? "business.email@company.com" : "your.email@example.com"}
                 required
+                className="bg-transparent border-white/30 text-white placeholder:text-white/50 focus-visible:border-[#E424FF]"
               />
             </div>
             {showRegistration && (
               <div className="space-y-2">
-                <Label htmlFor="businessPhone">Business Phone (Optional)</Label>
+                <Label htmlFor="businessPhone" className="text-white">Business Phone (Optional)</Label>
                 <Input
                   id="businessPhone"
                   type="tel"
                   value={businessPhone}
                   onChange={(e) => setBusinessPhone(e.target.value)}
                   placeholder="+1 (555) 123-4567"
+                  className="bg-transparent border-white/30 text-white placeholder:text-white/50 focus-visible:border-[#E424FF]"
                 />
               </div>
             )}
           </div>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-start sm:space-x-2">
-            <Button 
-              type="submit" 
-              className="group inline-block rounded-none font-bold px-6 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
-              disabled={isLoading}
-            >
-              <span className="flex items-center gap-2">
-                {isLoading ? "Loading..." : showRegistration ? "Register & Start Playing" : "Continue Playing"}
-                {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
-              </span>
-            </Button>
+          <div className="flex justify-start sm:justify-start">
+              <Button 
+                type="submit" 
+                className="group inline-block rounded-none font-bold px-6 py-2 bg-[#E424FF] hover:bg-[#d010eb] text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
+                disabled={isLoading}
+              >
+                <span className="flex items-center gap-2">
+                  {isLoading ? "Loading..." : showRegistration ? "Register & Play Now" : "Play Now"}
+                  {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
+                </span>
+              </Button>
           </div>
         </form>
       </DialogContent>

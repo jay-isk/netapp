@@ -13,7 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Gift, Lock, Sparkles, X, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Gift, Lock, Sparkles, X, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import { campaignAPI, type Day, type DayDetails } from "@/lib/api";
 import EmailEntry from "./email-entry";
@@ -27,6 +27,7 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
   const [isClient, setIsClient] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDays, setIsLoadingDays] = useState(false);
   const [days, setDays] = useState<Day[]>([]);
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [totalDays, setTotalDays] = useState<number>(propTotalDays || 12);
@@ -72,6 +73,7 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
 
   const loadDashboard = async () => {
     try {
+      setIsLoadingDays(true);
       const dashboard = await campaignAPI.getDashboard();
       
       if (dashboard.success) {
@@ -95,6 +97,8 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
       setShowEmailEntry(true);
       setIsRegistration(true);
       console.error('Dashboard load error:', error);
+    } finally {
+      setIsLoadingDays(false);
     }
   };
 
@@ -191,10 +195,10 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
     }
   };
 
-  const handleSessionCreated = () => {
+  const handleSessionCreated = async () => {
     setHasSession(true);
     setShowEmailEntry(false);
-    loadDashboard();
+    await loadDashboard();
   };
 
   const formatDate = (dateString: string | null) => {
@@ -207,67 +211,85 @@ export default function AdventCalendar({ totalDays: propTotalDays, onTotalDaysCh
     });
   };
 
-  // Show loading while checking session or if not client-side yet
-  if (!isClient || (isLoading && !hasSession && !showEmailEntry)) {
-    return (
-      <div className="w-full max-w-full z-10 flex items-center justify-center p-8">
-        <div className="text-primary-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  // Show email entry form if no session
+  // Show email entry form if no session (with skeleton cards in background)
   if (showEmailEntry && !isLoading) {
     return (
-      <EmailEntry
-        onSessionCreated={handleSessionCreated}
-        isRegistration={isRegistration}
-      />
+      <>
+        <EmailEntry
+          onSessionCreated={handleSessionCreated}
+          isRegistration={isRegistration}
+        />
+        {/* Show skeleton cards in background to prevent layout shift */}
+        <div className="w-full max-w-full z-0 opacity-50">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+            {Array.from({ length: totalDays }).map((_, index) => (
+              <SkeletonCard key={`bg-skeleton-${index}`} />
+            ))}
+          </div>
+        </div>
+      </>
     );
   }
 
   return (
     <div className="w-full max-w-full z-10">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-        {days.map((day) => {
-          const unlocked = day.is_available && !day.is_locked;
-          const answered = day.is_completed;
+        {isLoadingDays || days.length === 0 ? (
+          // Show skeleton cards while loading days
+          Array.from({ length: totalDays }).map((_, index) => (
+            <SkeletonCard key={`skeleton-${index}`} />
+          ))
+        ) : (
+          // Show actual day cards when loaded
+          days.map((day) => {
+            const unlocked = day.is_available && !day.is_locked;
+            const answered = day.is_completed;
 
-          return (
-            <div
-              key={day.day_number}
-              className="relative rounded-lg p-[5px] bg-gradient-to-tr from-[#E424FF] via-[#ffc700] to-[#E424FF] shadow-lg group"
-            >
-              <button
-                onClick={() => handleDayClick(day)}
-                disabled={!unlocked || loadingDayNumber === day.day_number}
-                className="relative aspect-[2.5/1] w-full flex items-center justify-between p-4 rounded-[6px] bg-primary shadow-lg transition-all duration-300 ease-in-out group-hover:bg-card-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:opacity-1 disabled:cursor-not-allowed disabled:bg-primary"
-                aria-label={`Day ${day.day_number}, ${unlocked ? "unlocked" : "locked"}${answered ? ", completed" : ""}`}
+            return (
+              <div
+                key={day.day_number}
+                className="relative rounded-lg p-[5px] bg-gradient-to-tr from-[#E424FF] via-[#ffc700] to-[#E424FF] shadow-lg group"
               >
-                {loadingDayNumber === day.day_number && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-primary/80 rounded-[6px] z-10">
-                    <Loader2 className="w-8 h-8 text-[#25006d] animate-spin" />
+                <button
+                  onClick={() => handleDayClick(day)}
+                  disabled={!unlocked || loadingDayNumber === day.day_number}
+                  className={`relative aspect-[2.5/1] w-full flex items-center justify-between p-4 rounded-[6px] shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:opacity-1 disabled:cursor-not-allowed ${
+                    unlocked 
+                      ? 'bg-[#e424ff] group-hover:bg-[#d010eb]' 
+                      : 'bg-primary group-hover:bg-card-hover disabled:bg-primary'
+                  }`}
+                  aria-label={`Day ${day.day_number}, ${unlocked ? "unlocked" : "locked"}${answered ? ", completed" : ""}`}
+                >
+                  {loadingDayNumber === day.day_number && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary/80 rounded-[6px] z-10">
+                      <Loader2 className="w-8 h-8 text-[#25006d] animate-spin" />
+                    </div>
+                  )}
+                  <span className={`absolute top-2 left-2 text-xs font-bold uppercase transition-colors ${
+                    unlocked 
+                      ? 'text-white group-hover:text-white/90' 
+                      : 'text-[#25006d] group-hover:text-[#eb5bff]'
+                  }`}>
+                    {day.day_date ? new Date(day.day_date + "T00:00:00").toLocaleDateString("en-US", { month: "long" }).toUpperCase() : "DECEMBER"}
+                  </span>
+                  {!unlocked && <Lock className="absolute top-2 right-2 w-6 h-6 text-muted-foreground/50" />}
+                  
+                  <div className="flex items-center gap-2">
+                    {answered && <Gift className="w-6 h-6 text-accent" />}
                   </div>
-                )}
-                <span className="absolute top-2 left-2 text-xs font-bold uppercase text-[#25006d] group-hover:text-[#eb5bff] transition-colors">
-                  {day.day_date ? new Date(day.day_date + "T00:00:00").toLocaleDateString("en-US", { month: "long" }).toUpperCase() : "DECEMBER"}
-                </span>
-                {!unlocked && <Lock className="absolute top-2 right-2 w-6 h-6 text-muted-foreground/50" />}
-                
-                <div className="flex items-center gap-2">
-                  {/* <span className="text-2xl font-bold font-headline text-[#25006d] group-hover:text-[#eb5bff] group-disabled:text-muted-foreground/30 transition-colors">
-                    Day
-                  </span> */}
-                  {answered && <Gift className="w-6 h-6 text-accent" />}
-                </div>
 
-                <span className="text-7xl md:text-8xl font-bold font-date text-[#25006d] group-hover:text-[#eb5bff] group-disabled:text-muted-foreground/30 transition-colors">
-                  {day.day_date ? new Date(day.day_date + "T00:00:00").getDate() : day.day_number}
-                </span>
-              </button>
-            </div>
-          );
-        })}
+                  <span className={`text-7xl md:text-8xl font-bold font-date transition-colors ${
+                    unlocked 
+                      ? 'text-white group-hover:text-white/90' 
+                      : 'text-[#25006d] group-hover:text-[#eb5bff] group-disabled:text-muted-foreground/30'
+                  }`}>
+                    {day.day_date ? new Date(day.day_date + "T00:00:00").getDate() : day.day_number}
+                  </span>
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {selectedDayDetails && (
@@ -341,13 +363,12 @@ function QuestionModal({
     return (
       <Dialog open={isOpen} onOpenChange={resetAndClose}>
         <DialogContent className="sm:max-w-2xl bg-card border-border p-0 gap-0">
-          <div className="flex flex-col items-center justify-center text-center p-8 bg-[#6f3df5] text-white rounded-t-lg">
+          <div className="flex flex-col items-center justify-center text-center p-8 bg-[#6f3df5] text-white rounded-lg">
             {isCorrect ? (
               <>
                 <Check className="w-16 h-16 text-green-400 bg-white/20 rounded-full p-2 mb-4" />
                 <h2 className="text-2xl font-bold mb-2">Thanks for playing!</h2>
-                <p className="text-lg mb-2">You're entered to win today's prize.</p>
-                <p className="text-lg mb-2">Check back tomorrow for another chance!</p>
+                <p className="text-lg mb-2">You're entered to win today's prize. Check back tomorrow for another chance!</p>
                 {correctAnswerText && (
                   <p className="text-base mt-4 pt-4 border-t border-white/20">
                     <span className="font-semibold">Correct Answer:</span> {correctAnswerText}
@@ -356,10 +377,9 @@ function QuestionModal({
               </>
             ) : (
               <>
-                <X className="w-16 h-16 text-red-400 bg-white/20 rounded-full p-2 mb-4" />
+                <X className="w-16 h-16 text-[#E424FF] bg-white/20 rounded-full p-2 mb-4" />
                 <h2 className="text-2xl font-bold mb-2">Thanks for playing!</h2>
-                <p className="text-lg mb-2">Please see the correct answer below,</p>
-                <p className="text-lg mb-2">and check back tomorrow for another chance!</p>
+                <p className="text-lg mb-2">Please see the correct answer below, and check back tomorrow for another chance!</p>
                 {correctAnswerText && (
                   <p className="text-base mt-4 pt-4 border-t border-white/20">
                     <span className="font-semibold">Correct Answer:</span> {correctAnswerText}
@@ -367,11 +387,6 @@ function QuestionModal({
                 )}
               </>
             )}
-          </div>
-          <div className="p-6 bg-white rounded-b-lg text-center text-black">
-            <Button onClick={resetAndClose} className="w-full">
-              Close
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -387,23 +402,31 @@ function QuestionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
-      <DialogContent className="sm:max-w-2xl bg-card border-border p-0 gap-0">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader className="bg-[#6f3df5] text-white p-6 rounded-t-lg">
-            <div className="flex items-center gap-6">
-              <div className="flex-1">
-                <DialogTitle className="text-2xl font-headline flex items-center gap-2">
-                  <Sparkles className="text-primary-foreground w-5 h-5" />
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-card border-border p-0 gap-0 flex flex-col overflow-hidden" hideClose>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <DialogHeader className="bg-[#6f3df5] text-white p-6 rounded-t-lg text-left flex-shrink-0">
+            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+              <div className="flex-1 text-left">
+                <DialogTitle className="text-2xl font-headline flex items-center gap-2 text-left">
+                  <button 
+                    type="button" 
+                    onClick={resetAndClose}
+                    className="hover:opacity-80 transition-opacity"
+                    aria-label="Go back"
+                  >
+                    <ChevronLeft className="text-primary-foreground w-6 h-6" />
+                  </button>
                   {formattedDate || `Day ${day.day_number}`}
                 </DialogTitle>
-                <DialogDescription className="text-lg text-white/90 pt-2">
+                <DialogDescription className="text-lg text-white/90 pt-2 text-left">
                   Today's prize is a <span className="font-bold">{day.prize_name}</span>.
-                  <br />
-                  Answer the question below correctly for a chance to win.
+                  <br className="hidden md:block" />
+                  {' '}Answer the question below correctly for a chance to win.
                 </DialogDescription>
               </div>
+              {/* Prize Image - Desktop only (in header) */}
               {day.prize_image && (
-                <div className="w-48 h-48 rounded-md flex items-center justify-center">
+                <div className="hidden md:flex w-48 h-48 rounded-md items-center justify-center">
                   <Image
                     src={day.prize_image}
                     alt={`${day.prize_name} prize image`}
@@ -415,7 +438,7 @@ function QuestionModal({
               )}
             </div>
           </DialogHeader>
-          <div className="p-6 bg-white rounded-b-lg">
+          <div className="p-6 bg-white rounded-b-lg overflow-y-auto flex-1">
             <p className="text-lg text-black mb-4">{day.question}</p>
             <RadioGroup
               className="my-6 space-y-2"
@@ -426,26 +449,58 @@ function QuestionModal({
                 <div key={index} className="flex items-center space-x-2">
                   <RadioGroupItem value={option.value} id={`option-${index}`} />
                   <Label htmlFor={`option-${index}`} className="text-base text-black">
-                    {option.value}. {option.label}
+                    {option.label}
                   </Label>
                 </div>
               ))}
             </RadioGroup>
-            <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-start sm:space-x-2">
+            <div className="flex justify-center sm:justify-start">
               <Button 
                 type="submit" 
-                className="group inline-block rounded-none font-bold px-6 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
+                className="group inline-block rounded-none font-bold px-6 py-2 bg-[#00DDF4] hover:bg-[#d010eb] text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0" 
                 disabled={isLoading}
               >
                 <span className="flex items-center gap-2">
-                  {isLoading ? "Submitting..." : "Submit Answer"}
+                  {isLoading ? "Submitting..." : "Submit"}
                   {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
                 </span>
               </Button>
-            </DialogFooter>
+            </div>
+            
+            {/* Prize Block - Mobile only (bottom, after submit button) */}
+            {day.prize_image && (
+              <div className="md:hidden mt-6 pt-6">
+                <div className="w-full text-center">
+                  <div className="w-full flex justify-center items-center">
+                    <Image
+                      src={day.prize_image}
+                      alt={`${day.prize_name} prize image`}
+                      width={180}
+                      height={180}
+                      className="rounded-md object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Skeleton loading card component
+function SkeletonCard() {
+  return (
+    <div className="relative rounded-lg p-[5px] bg-gradient-to-tr from-[#E424FF] via-[#ffc700] to-[#E424FF] shadow-lg animate-pulse">
+      <div className="relative aspect-[2.5/1] w-full flex items-center justify-between p-4 rounded-[6px] bg-primary shadow-lg">
+        <span className="absolute top-2 left-2 h-3 w-16 bg-[#25006d]/30 rounded"></span>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-[#25006d]/30 rounded"></div>
+        </div>
+        <div className="text-7xl md:text-8xl font-bold font-date text-[#25006d] group-hover:text-[#eb5bff] group-disabled:text-muted-foreground/30 transition-colors">&nbsp;</div>
+      </div>
+    </div>
   );
 }
